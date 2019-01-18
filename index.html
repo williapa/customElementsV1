@@ -1,0 +1,96 @@
+<html>
+
+<head>
+  <!--pollyfill Reflect for "older" browsers-->
+  <script src="https://cdn.rawgit.com/paulmillr/es6-shim/master/es6-shim.min.js"></script>
+  <!--pollyfill custom elements for "older" browsers-->
+  <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.2.4/webcomponents-bundle.js"></script>
+  <script type="text/javascript">
+    function MyEl() {
+      var _this = Reflect.construct(HTMLElement, [], this.constructor);
+      _this.shadowRoot = _this.attachShadow({mode: 'open'});
+      return _this;
+    }
+
+    MyEl.prototype = Object.create(HTMLElement.prototype);
+
+    MyEl.observedAttributes = ['val'];
+
+    MyEl.prototype.constructor = MyEl;
+
+    Object.setPrototypeOf(MyEl, HTMLElement);
+
+    MyEl.prototype.connectedCallback = function() {
+      var style = document.createElement('style');
+      style.textContent = ".small { font: italic 15px sans-serif; fill: red; }";
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+      var rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+      var text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+      rect.setAttribute('x',5);
+      rect.setAttribute('y',5);
+      rect.setAttribute('width',500);
+      rect.setAttribute('height',500);
+      rect.setAttribute('fill','#95B3D7');
+      text.setAttribute('x', 15);
+      text.setAttribute('y', 15);
+      text.setAttribute('class', 'small');
+      text.textContent = 'init';
+      svg.appendChild(rect);
+      svg.appendChild(text);
+      this.rect = rect;
+      this.text = text;
+      this.shadowRoot.appendChild(style);
+      this.shadowRoot.appendChild(svg);
+    };
+
+    MyEl.prototype.trigger = function (val) {
+      if (!val) {
+        val = '000000';
+      }
+      this.shadowRoot.querySelector('rect').setAttribute('fill', '#' + val);
+      this.text.textContent = val;
+    };
+
+    MyEl.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
+      console.log('attribute changed: ' + name + ', old value: ' + oldValue +  ', new value: ' + newValue);
+      if(this.rect && this.text) {
+        this.rect.setAttribute('fill', '#' + newValue);
+        this.text.textContent = newValue;
+        console.log(this.text);
+      } else if (this.rect) {
+        console.log('the rect was there.');
+      } else {
+        console.log('why');
+      }
+    };
+
+    customElements.define('my-el', MyEl);
+  </script>
+</head>
+
+<body>
+<div style="display:flex;">
+<div style="flex:1 1 auto;width:50%;">
+  <my-el val="95B3D7"></my-el>
+</div>
+<div style="flex:1 1 auto;width:50%;">
+  <svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
+    <style>
+      .small { font: italic 13px sans-serif; }
+      .heavy { font: bold 30px sans-serif; }
+
+      /* Note that the color of the text is set with the    *
+       * fill property, the color property is for HTML only */
+      .Rrrrr { font: italic 40px serif; fill: red; }
+    </style>
+
+    <text x="20" y="35" class="small">My</text>
+    <text x="40" y="35" class="heavy">cat</text>
+    <text x="55" y="55" class="small">is</text>
+    <text x="65" y="55" class="Rrrrr">Grumpy!</text>
+  </svg>
+</div>
+</div>
+</body>
+
+</html>

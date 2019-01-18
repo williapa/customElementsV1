@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Custom Element React Integration</title>
+	<script src="https://cdn.rawgit.com/paulmillr/es6-shim/master/es6-shim.min.js"></script>
+	<script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.2.4/webcomponents-bundle.js"></script>
+    <script src="element.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script type="text/babel">
+var CarListing = React.createClass({
+  loadCarsFromServer: function() {
+    var cars = [
+      {
+          "address": "Honda Civil",
+          "description": "This is a car in the city",
+          "saves": 505050,
+          "saved": false
+      },
+      {
+        "address": "Cadillac Suburban",
+        "description": "This is a car in the suburbs",
+        "saves": 124,
+        "saved": true
+      },
+      {
+        "address": "Chevy Sliverado",
+        "description": "This is a nice little country car",
+        "saves": 182,
+        "saved": false
+      }
+    ];
+    this.setState({cars: cars});
+  },
+  loadSavesFromServer: function() {
+    //Again, we hard-code for testing
+    var saves = [
+      {
+        "saves": 505050,
+        "saved": false
+      },
+      {
+        "saves": 124,
+        "saved": true
+      },
+      {
+        "saves": 182,
+        "saved": false
+      }
+    ];
+    this.setState({saves: saves});
+  },
+  toggleSave: function(index) {
+    
+    var saves = this.state.saves;
+    
+  	if (saves[index].saved) {
+      saves[index].saves--;
+      saves[index].saved = false;
+		}
+		else {
+	  		saves[index].saves++;
+	      	saves[index].saved = true;
+		}
+		this.setState({
+			saves: saves,
+		});
+  
+    return saves[index].saved;
+ 
+	},
+	getInitialState: function(){
+ 
+		var saves = [];
+    	var cars = [];
+    
+		return {
+	      saves: saves,
+	      cars: cars
+	    }
+	},
+  componentDidMount: function() {
+    this.loadCarsFromServer();
+    this.loadSavesFromServer();
+  },
+  render: function() {
+    var saves = this.state.saves;
+    var toggleSave = this.toggleSave;
+    
+    var carNodes = this.state.cars.map(function(car, index) {
+      
+      if (typeof(saves[index]) == "undefined") {
+        saves[index] = {saves: 0};
+      }
+      return (
+        <Car
+          key={index}
+          id={index}
+          onToggleSave={toggleSave}
+          isSaved={saves[index].saved}
+          photo={car.photo}
+          address={car.address}
+          numSaves={saves[index].saves}
+        >
+          {car.description}
+        </Car>
+      );
+    });
+    return (
+      <div className="carList">
+        {carNodes}
+      </div>
+    );
+  }
+});
+
+var Car = React.createClass({
+  toggleSave: function(index){
+    return this.props.onToggleSave(index);
+  },
+  render: function() {
+    return (
+      <div className="car">
+        <p className="carAddress">
+          {this.props.address}
+        </p>
+        <p className="carDescription">
+          {this.props.children}
+        </p>
+        <Saves
+          id={this.props.id}
+          handleSave={this.toggleSave}
+          isSaved={this.props.isSaved}
+          numSaves={this.props.numSaves}
+        ></Saves>
+        <my-el val={this.props.numSaves}></my-el>
+      </div>
+    );
+  }
+});
+ 
+var Saves = React.createClass({
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var isSaved = this.props.handleSave(this.props.id);
+  },
+  render: function() {
+    var savedText = '';
+    var submitText = 'Save';
+    if (this.props.isSaved) {
+      savedText = 'You have saved this car.';
+      submitText = 'Remove';
+    }
+    
+    return (
+      <div className="saves">
+        <form onSubmit={this.handleSubmit}>
+          <input type="submit" value={submitText} />
+        </form>
+      {this.props.numSaves} saves. {savedText}
+      </div>
+    );
+  }
+});
+ 
+React.render(
+  <CarListing url="cars.json" savesUrl="saves.json" pollInterval={15000} />,
+  document.getElementById('content')
+);
+</script>
+  </body>
+</html>
